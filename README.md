@@ -1,5 +1,4 @@
 # Cancer-Pathway-Interactive-Visualizer
-Visualizing altered pathways can help researchers identify potential therapeutic targets. Allows comparison of pathways across different types of cancer, potentially revealing common or unique alteration patterns.
 
 The key objective and benefits of creating a Cancer Pathway Interactive Visualizer using R/Shiny are multifaceted, addressing both scientific research and educational aspects:
 1. Enhanced Understanding of Cancer Biology
