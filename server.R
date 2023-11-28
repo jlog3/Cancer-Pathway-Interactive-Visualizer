@@ -27,31 +27,147 @@ library(DESeq2)
 # 
 
 server <- function(input, output, session) {
+  # browser()
+  # Load the CSV file
+  pathways_data <- read.csv("data/hsa_pathways_with_genes.csv", stringsAsFactors = FALSE, header = FALSE, col.names = c('pathwayids','pathwaynames','pathwayidsnames'))
+  
+  # Check the structure of pathways_data
+  print(dim(pathways_data))
+  print(head(pathways_data))
+  
+  # Apply the sub function
+  # pathway_ids <- sub(":.*", "", pathways_data$Pathway)
+  pathway_ids <- pathways_data$pathwayids
+  
+  
+  # Check the result of the sub function
+  print(length(pathway_ids))
+  print(head(pathway_ids))
+  
+  # Call this reactive expression in the UI
+  # Assuming pathway_ids is correctly extracted
+  observe({
+    # updateSelectInput(session, "pathwayId", choices = pathways_data$pathwayidsnames)
+    updateSelectInput(session, "pathwayId", choices = pathways_data$pathwayidsnames, selected = NULL)
+    })
+  # then after they select it split at the : to get the pathway id
   
   # Reactive expression to fetch gene names for pathway
   pathway_data <- reactive({
-    message('tying pathway_data')
     req(input$pathwayId)  # Ensure that a pathway ID is selected
+    message('tying pathway_data')
+    
+    # will need to get to the left of : later when using full pathway name/title
+    # also replace other instances of input$pathwayId   
+    # browser()
+    
+    # while we have the 3 column file form  c('pathwayids','pathwaynames','pathwayidsnames')
+    # Retrieve the selected pathway name
+    selected_name <- input$pathwayId
+    
+    # Find the corresponding pathway ID
+    selected_id <- pathways_data$pathwayids[which(pathways_data$pathwayidsnames == selected_name)]
     
     # browser()
-    get_gene_names_for_pathway(input$pathwayId)
+    gene_names <- get_gene_names_for_pathway(selected_id)  
+    # Assuming gene_names is your data frame
+    colnames(gene_names)[2] <- selected_name
+    # Extracting the second column (now named 'selected_name')
+    # selected_name_column <- gene_names$selected_name
+    selected_name_column <- gene_names[, 2]
     
+    # gene_names <- gene_names[, 0:1]
+    # Extract the first column
+    first_column <- gene_names[, 1, drop = FALSE]
+    
+    # Get the row names
+    row_names <- rownames(gene_names)
+    
+    # Combine row names and the first column into a new data frame
+    gene_names <- data.frame(RowNames = row_names, FirstColumn = first_column)
+    gene_names <- first_column
+    
+    # Assuming selected_name_column is your character vector
+    selected_name_df <- setNames(data.frame(selected_name_column), selected_name)
+    
+    
+    list(gene_names=gene_names, selected_name_column=selected_name_df, selected_id=selected_id)
+    # get_gene_names_for_pathway(input$pathwayId)  
+    
+    # return(selected_id)
   })  
+  
+  
   # Output for gene names table
+  # If pathway_data could be empty or NULL at times (like before a file is uploaded or processed), ensure your code can handle such cases:
   output$geneNames <- renderTable({
+    # browser()
     # pathway_data()
-    head(pathway_data(), n = 5)  # Adjust 'n' as needed
+    if (is.null(pathway_data()$gene_names) || nrow(pathway_data()$gene_names) == 0) {
+      return()  # Return early if data is not available
+    }
+    # head(pathway_data()$gene_names, n = 7)  # Adjust 'n' as needed
+    # head(pathway_data()$selected_name_column, n = 7)  # Adjust 'n' as needed
+    pathway_data()$selected_name_column  # Adjust 'n' as needed
+    
     
   })
   
+  # Helper Function to get gene names for a pathway
+  get_gene_names_for_pathway <- function(pathwayid) {
+    # browser()
+    message('in getgenenames for pathway?')
+    # Attempt to fetch data from KEGG
+    result <- tryCatch({
+      pathway_info <- keggGet(pathwayid)
+      
+      # browser()
+      
+      # Extract gene information
+      gene_info <- pathway_info[[1]][["GENE"]]
+      
+      # Process to extract gene names and descriptions
+      genes <- gene_info[seq(2, length(gene_info), by = 2)]
+      
+      # Extract just the gene names (up to the semicolon)
+      gene_names <- sapply(strsplit(genes, ";"), function(x) x[1])
+      
+      # (might do automatically) find the type of gene name used in the users file so we can translate it to ensemble
+      
+      # Map gene symbols to Ensembl IDs
+      mapped_ids <- mapIds(org.Hs.eg.db, 
+                           keys = gene_names, 
+                           column = "ENSEMBL", 
+                           keytype = "SYMBOL",
+                           multiVals = "first")
+      
+      # browser()
+      
+      # Return the gene names as a data frame for table output
+      data.frame(GeneNames = mapped_ids, GeneDetails = genes)
+      
+      
+    }, error = function(e) {
+      # Handle error (e.g., KEGG site down)
+      message("Error in fetching data from KEGG: ", e$message)
+      
+      # Return an empty data frame or a data frame with an error message
+      return(data.frame(GeneNames = "Data unavailable due to KEGG server issue"))
+    })
+    
+    # return(result[["GeneNames"]])
+    return(result)
+    
+  }
+  
+  # done getting pathway details
 
-
-    # Reactive expression for DEA
+  # Reactive expression for DEA
   deaResults <- reactive({
     req(geneData(), geneData2())
     print('in dea')
     
-    browser()
+    # browser()
     #   ctl         exper
     
     # geneDataX return the ensembleIds and expression 
@@ -61,8 +177,8 @@ server <- function(input, output, session) {
     # rownames(geneData2()) <- gsub("\\..*", "", rownames(geneData2()))
     
     # rmove the irrelavent genes from the expression set for the user Genedata
-    expression_selected_ctl <- geneData()[pathway_data()[["GeneNames"]], ]
-    expression_selected_exp <- geneData2()[pathway_data()[["GeneNames"]], ]
+    expression_selected_ctl <- geneData()[pathway_data()$gene_names[["GeneNames"]], ]
+    expression_selected_exp <- geneData2()[pathway_data()$gene_names[["GeneNames"]], ]
     
     # gene_expression_sample1 <- expression_selected[, 1:2]  # limit the samples if needed
     
@@ -135,14 +251,15 @@ server <- function(input, output, session) {
     
     # Generate pathway diagram
     pathview(gene.data = deaResults()$log_fold_changes,
-             pathway.id = input$pathwayId,
+             # pathway.id = input$pathwayId,
+             pathway.id = pathway_data()$selected_id,
              species = "hsa",
              out.dir = outputDir,  # tempdir() in production pros and cons to this
              gene.idtype = "ensembl",
              png = TRUE)
     
     # Construct the dynamic file name
-    imageName <- paste0(input$pathwayId, ".pathview.png")
+    imageName <- paste0(pathway_data()$selected_id, ".pathview.png")
     
     # Construct the file path for the image
     imagePath <- file.path(outputDir, imageName)
@@ -155,56 +272,35 @@ server <- function(input, output, session) {
   })
   
   
-  # Helper Function to get gene names for a pathway
-  get_gene_names_for_pathway <- function(pathwayid) {
-    # browser()
-    message('in getgenenames for pathway?')
-    # Attempt to fetch data from KEGG
-    result <- tryCatch({
-      pathway_info <- keggGet(pathwayid)
-      
-      # browser()
-      
-      # Extract gene information
-      gene_info <- pathway_info[[1]][["GENE"]]
-      
-      # Process to extract gene names and descriptions
-      genes <- gene_info[seq(2, length(gene_info), by = 2)]
-      
-      # Extract just the gene names (up to the semicolon)
-      gene_names <- sapply(strsplit(genes, ";"), function(x) x[1])
-      
-      # (might do automatically) find the type of gene name used in the users file so we can translate it to ensemble
-      
-      # Map gene symbols to Ensembl IDs
-      mapped_ids <- mapIds(org.Hs.eg.db, 
-                           keys = gene_names, 
-                           column = "ENSEMBL", 
-                           keytype = "SYMBOL",
-                           multiVals = "first")
-      
-      # browser()
-      
-      # Return the gene names as a data frame for table output
-      data.frame(GeneNames = mapped_ids)
-      
-    }, error = function(e) {
-      # Handle error (e.g., KEGG site down)
-      message("Error in fetching data from KEGG: ", e$message)
-      
-      # Return an empty data frame or a data frame with an error message
-      return(data.frame(GeneNames = "Data unavailable due to KEGG server issue"))
-    })
-    
-    # return(result[["GeneNames"]])
-    return(result)
-    
-  }
   
-  # Render the pathway diagram in UI
+  
+  # # Render the pathway diagram in UI
+  # output$pathwayOutput <- renderImage({
+  #   # browser()
+  #   pathway_diagram()$image
+  # }, deleteFile = FALSE)
+  
+  # Define a reactive expression for image readiness
+  isImageReady <- reactive({
+    # Your logic to determine if the image is ready
+    # Example: Check if a necessary input is provided
+    !is.null(pathway_diagram())
+  })
+  
+  output$pathwayUI <- renderUI({
+    if (isImageReady()) {
+      imageOutput("pathwayOutput")
+    }
+  })
+  
+  # Render the pathway diagram
   output$pathwayOutput <- renderImage({
-    pathway_diagram()$image
+    # browser()
+    pathway_diagram()$image  # Assuming pathway_diagram() returns the image information
   }, deleteFile = FALSE)
+  
+  
+  
 
   # Output the gene names
   # output$geneNames <- renderTable({
@@ -218,24 +314,47 @@ server <- function(input, output, session) {
   
   
   
-    # # Reactive value to store example control data status
+
+  # 
+  # 
+  # # Reset example data when a file is uploaded
+  # observeEvent(input$file2, {
+  #   if (!is.null(input$file2)) {
+  #     # Reset example data and its loaded status
+  #     reactiveExampleData(NULL)
+  #     exampleControlDataLoaded(FALSE)
+  #   }
+  # })
+  # observeEvent(input$file1, {
+  #   if (!is.null(input$file1)) {
+  #     # Reset example data and its loaded status
+  #     reactiveExampleData(NULL)
+  #     exampleControlDataLoaded(FALSE)
+  #   }
+  # })
+  
+  #   # # Reactive value to store example control data status
   exampleControlDataLoaded <- reactiveVal(FALSE)
-  # # Reactive value to store the example data
+  # # # Reactive value to store the example data
   reactiveExampleData <- reactiveVal(NULL)
   
-
-  # Reset example data when a file is uploaded
-  observeEvent(input$file2, {
-    if (!is.null(input$file2)) {
-      # Reset example data and its loaded status
-      reactiveExampleData(NULL)
-      exampleControlDataLoaded(FALSE)
-    }
-  })
+  # Reactive value to store gene data
+  geneData <- reactiveVal()
   
   # disease data This reactive expression will process the file when it's uploaded
-  geneData <- reactive({
+  # geneData <- reactive({
+  observeEvent(input$file1, {
+    # browser()
     req(input$file1)
+    
+    # when we load the example data may want to reverse this to remove user data and load example?
+    if (exampleControlDataLoaded()) {
+      geneData(NULL)
+      geneData2(NULL)
+      exampleControlDataLoaded(FALSE)
+    }
+
+    
     # browser()
     # When no file is uploaded, return NULL
 
@@ -243,35 +362,75 @@ server <- function(input, output, session) {
     data_all <- preprocess_gene_data(inFile)
     # Fallback for an empty or non-existent file
     if (is.null(input$file1)) {
-      return(data.frame(GeneNames = character(0), stringsAsFactors = FALSE))
+      # return(data.frame(GeneNames = character(0), stringsAsFactors = FALSE))
+      geneData(data.frame(GeneNames = character(0), stringsAsFactors = FALSE))
+      
     } else {
       # data_all <- read.csv(input$file1$datapath)
       # colnames(data_all)[1] <- "Gene Names"
-      return(data_all)
+      # return(data_all)
+      geneData(data_all)
+      
     }
   })
   
+  geneData2 <- reactiveVal()
+  
   # control data  This reactive expression will process the file when it's uploaded
-  geneData2 <- reactive({
+  # geneData2 <- reactive({
+  observeEvent(input$file2, {
+    # browser()
     req(input$file2)
+
+    if (exampleControlDataLoaded()) {
+      geneData(NULL)
+      geneData2(NULL)
+      exampleControlDataLoaded(FALSE)
+    }
     
     inFile <- input$file2
     data_all <- preprocess_gene_data(inFile)
     
     # Fallback for an empty or non-existent file
     if (is.null(input$file2)) {
-      return(data.frame(GeneNames = character(0), stringsAsFactors = FALSE))
+      # return(data.frame(GeneNames = character(0), stringsAsFactors = FALSE))
+      geneData2(data.frame(GeneNames = character(0), stringsAsFactors = FALSE))
+      
     } else {
       # data_all <- read.csv(input$file2$datapath)
       # colnames(data_all)[1] <- "Gene Names"
-      return(data_all)
+      # return(data_all)
+      geneData2(data_all)
     }
   })
   
+  processFile <- function(inFile) {
+    # browser()
+    tryCatch({
+      # If inFile is a file uploaded via Shiny
+      if (is.list(inFile)) {
+        data <- read.csv(inFile$datapath, row.names = 1)
+      } else {
+        # If inFile is just a file path
+        data <- read.csv(inFile, row.names = 1)
+      }
+      return(data)
+    }, error = function(e) {
+      # Error handling
+      cat("Error in reading file: ", e$message, "\n")
+      return(NULL)
+    })
+  }
+  
+  
   preprocess_gene_data <- function(inFile) {
     # browser()
+    
     # Read the uploaded file
-    data_all <- read.csv(inFile$datapath, row.names = 1)
+    # data_all <- read.csv(inFile$datapath, row.names = 1)
+    data_all <- processFile(inFile)
+    
+    
     print(class(data_all))  # "data.frame"
     # data_all <- assay(data_all)  # cant do that
     
@@ -363,14 +522,38 @@ server <- function(input, output, session) {
   observeEvent(input$loadExample, {
     # browser()
     # Load the example data
-    exampleData <- read.csv("kirc_expression_matrix.csv")
-
+  
+    # just make this load into input$file1 input$file2
+      # exampleData <- read.csv("kirc_expression_matrix.csv")
+  
+    # Paths to the example files
+    path_to_file1 <- 'primary_tumor_test_rawcounts.csv'
+    path_to_file2 <- 'primary_normal_test_rawcounts.csv'
+    
+    # Process the data as if it was uploaded
+    file1gd <- processGeneDataFile(path_to_file1) 
+    file2gd <- processGeneDataFile(path_to_file2)
+    
     # Store the loaded data in a reactive value
-    reactiveExampleData(exampleData)
+    geneData(file1gd)
+    geneData2(file2gd)
 
     # Indicate that the example data is loaded
     exampleControlDataLoaded(TRUE)
   })
+  
+  processGeneDataFile <- function(inputFile) {
+    # browser()
+    # Fallback for an empty or non-existent file
+    if (is.null(inputFile)) {
+      return(data.frame(GeneNames = character(0), stringsAsFactors = FALSE))
+      
+    } else {
+      data_all <- preprocess_gene_data(inputFile)
+      return(data_all)
+    }
+  }
+  
 }
 
   # 
@@ -386,36 +569,4 @@ server <- function(input, output, session) {
   #   }
   # })
   
-  # load user disease data or example data----^
-  
- 
-# # pathway_diagram is a reactive expression that generates a new pathway diagram based on user input.
-# # renderImage is used to display the generated pathway diagram in the UI.
-# 
-# get_gene_names_for_pathway <- function(pathwayid) {
-#   # Retrieve pathway information
-#   pathway_info <- keggGet(pathwayid)
-#   
-#   # Extract gene information
-#   gene_info <- pathway_info[[1]][["GENE"]]
-#   
-#   # Process to extract gene names
-#   genes <- gene_info[seq(2, length(gene_info), by = 2)]
-#   gene_names <- sapply(strsplit(genes, ";"), function(x) x[1])
-#   
-#   # Map gene symbols to Ensembl IDs
-#   mapped_ids <- mapIds(org.Hs.eg.db, 
-#                        keys = gene_names, 
-#                        column = "ENSEMBL", 
-#                        keytype = "SYMBOL",
-#                        multiVals = "first")
-#   
-#   return(list(gene_names = gene_names, mapped_ids = mapped_ids))
-# }
-# 
-# # Example usage
-# pathway_genes <- get_gene_names_for_pathway("hsa04010")
-# head(pathway_genes$gene_names)
-# head(pathway_genes$mapped_ids)
 
-# load example data button: need to load sample expression data 
