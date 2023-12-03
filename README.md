@@ -1,25 +1,29 @@
-# Cancer-Pathway-Interactive-Visualizer
+## Getting Started
 
-The key objective and benefits of creating a Cancer Pathway Interactive Visualizer using R/Shiny are multifaceted, addressing both scientific research and educational aspects:
-1. Enhanced Understanding of Cancer Biology
-Visualizing Complex Data: Cancer research generates vast amounts of complex data. This tool will visually map these data onto biological pathways, making it easier to understand.
-Highlighting Key Mutations: By focusing on altered pathways and frequently mutated or dysregulated components in different cancer types, the tool will help in pinpointing critical areas of cancer biology.
-2. Facilitating Research and Discovery
-Identifying Potential Targets: Visualizing altered pathways can help researchers identify potential therapeutic targets.
-Comparative Analysis: Allows comparison of pathways across different types of cancer, potentially revealing common or unique alteration patterns.
-3. Educational Tool
-Teaching Aid: Can be used as an educational resource for students and new researchers to understand cancer biology.
-Interactive Learning: The interactive nature of the tool enhances learning by allowing users to explore and manipulate data.
-4. Personalized Medicine
-Tailored Therapies: Understanding specific pathway alterations in different cancers can guide the development of personalized treatment strategies.
-5. Collaboration and Sharing
-Data Sharing Platform: Researchers can use the tool to share findings, facilitating collaborative efforts.
-Integrating Diverse Data Sources: The tool can integrate data from various sources, offering a comprehensive view of cancer pathways.
-6. Accessibility and User Engagement
-User-Friendly Interface: Makes complex cancer genomics data accessible to a broader audience, including those without deep bioinformatics skills.
-Encouraging Exploration: The tool's interactive nature encourages users to explore and ask new research questions.
-7. Data-Driven Decision Making
-Clinical Decision Support: For clinicians, the visualizer can aid in understanding the molecular basis of a patient's cancer, supporting more informed decision-making.
-8. Supporting Hypothesis Generation and Testing
-Discovery of Novel Insights: By visually mapping cancer pathways, new hypotheses about cancer development and progression can be generated and tested.
-In summary, the Cancer Pathway Interactive Visualizer serves as a powerful tool for visualizing complex cancer genomics data, facilitating research, education, and clinical decision-making, and fostering a deeper understanding of cancer biology.
+To get started with this R/Shiny app, follow these steps:
+
+1. **Create a New Directory**: Open your terminal or file explorer and create a new directory where you want to set up the app. You can do this with the following command:
+
+   ```bash
+   mkdir cancer-pathway-interactive-visualizer
+git clone https://github.com/jlog3/Cancer-Pathway-Interactive-Visualizer.git cancer-pathway-interactive-visualizer
+
+2. **Install Required R Packages**:
+```R
+# Install required R packages
+install.packages("shiny", dependencies = TRUE)     # shiny (version >= 1.8.0)
+install.packages("pathview", dependencies = TRUE)  # pathview (version >= 1.42.0)
+install.packages("KEGGREST", dependencies = TRUE)  # KEGGREST (version >= 1.42.0)
+install.packages("TCGAbiolinks", dependencies = TRUE)  # TCGAbiolinks (version >= 2.30.0)
+install.packages("Biostrings", dependencies = TRUE)   # Biostrings (version >= 2.70.1)
+install.packages("biomaRt", dependencies = TRUE)      # biomaRt (version >= 2.58.0)
+install.packages("SummarizedExperiment", dependencies = TRUE)  # SummarizedExperiment (version >= 1.32.0)
+install.packages("DESeq2", dependencies = TRUE)       # DESeq2 (version >= 1.42.0)
+install.packages("AnnotationDbi", dependencies = TRUE) # AnnotationDbi (version >= 1.64.1)
+install.packages("org.Hs.eg.db", dependencies = TRUE)  # org.Hs.eg.db (version >= 3.18.0)
+```
+3. **Run the Shiny App**:
+After installing the packages, you can run the Shiny app using the following command in R:
+```R
+shiny::runApp("/path/to/shiny_app/")
+```
