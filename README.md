@@ -32,6 +32,7 @@ After installing the packages, you can run the Shiny app using the following com
 shiny::runApp("/path/to/shiny_app/")
 ```
 Click "Load Example Data" and wait for plot to update. 
+![pathway diagram](./images/cpv.png)
 
 
 ## User Data Upload
@@ -41,7 +42,7 @@ Two CSV files are required for plotting.
 - Control/Healthy Data
 
 One of these files should look like this:
-![Alt Text](Image_URL)
+![sample and gene matrix](./images/gene_csv.png)
 
 Rows are ensembl gene ids. 
 Columns are sample names.
