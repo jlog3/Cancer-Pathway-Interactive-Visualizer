@@ -22,8 +22,21 @@ install.packages("DESeq2", dependencies = TRUE)       # DESeq2 (version >= 1.42.
 install.packages("AnnotationDbi", dependencies = TRUE) # AnnotationDbi (version >= 1.64.1)
 install.packages("org.Hs.eg.db", dependencies = TRUE)  # org.Hs.eg.db (version >= 3.18.0)
 ```
+
 3. **Run the Shiny App**:
 After installing the packages, you can run the Shiny app using the following command in R:
 ```R
 shiny::runApp("/path/to/shiny_app/")
 ```
+Click "Load Example Data" and wait for plot to update. 
+
+
+## User Data Upload
+
+
+#### Considerations: 
+
+
+## Background
+
+## Future Development
