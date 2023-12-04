@@ -57,17 +57,21 @@ Choose your project of interest.
 Follow the R script  downloadTCGA.R
 Follow directions for changing the project and sample type as you require. 
 
-#### Data considerations: 
+#### Data considerations:
 
--Tissue-Specific Expression:
-   -For accurate pathway analysis, the data should ideally come from the same tissue or cell type that is under study in the pathway.
-   -Gene expression can vary significantly between different tissues or cell types. Certain genes may be highly expressed in one tissue but not in others.
--Stage of Disease:
-   -The stage of the disease can also affect gene expression profiles. Users should consider whether their data reflects the disease stage relevant to their research.
--Inter-Patient Variability:
-   -Variability between patients can impact gene expression profiles. If the goal is to draw broader conclusions, it’s beneficial to use data that represents a cross-section of the patient population affected by the specific cancer.
--Consistency in Data Sources:
-   -Consistency in the source of data is important. Mixing data from different tissues, disease stages, or patient profiles without proper controls can lead to misleading conclusions.
+- Tissue-Specific Expression:
+  - For accurate pathway analysis, the data should ideally come from the same tissue or cell type that is under study in the pathway.
+  - Gene expression can vary significantly between different tissues or cell types. Certain genes may be highly expressed in one tissue but not in others.
+
+- Stage of Disease:
+  - The stage of the disease can also affect gene expression profiles. Users should consider whether their data reflects the disease stage relevant to their research.
+
+- Inter-Patient Variability:
+  - Variability between patients can impact gene expression profiles. If the goal is to draw broader conclusions, it’s beneficial to use data that represents a cross-section of the patient population affected by the specific cancer.
+
+- Consistency in Data Sources:
+  - Consistency in the source of data is important. Mixing data from different tissues, disease stages, or patient profiles without proper controls can lead to misleading conclusions.
+
 
 You are encouraged to submit data containing the genes in the selected pathway, but the app is flexible and will tell you which genes in the pathway are not found in your data.
 
