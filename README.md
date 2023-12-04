@@ -36,6 +36,28 @@ Click "Load Example Data" and wait for plot to update.
 
 
 ## User Data Upload
+Two CSV files are required for plotting. 
+-Experiment/Tumor Data
+-Control/Healthy Data
+
+One of these files should look like this:
+
+Rows are ensembl gene ids. 
+Columns are sample names.
+
+Each file/group must contain at least two samples (columns). 
+This allows you to make meaningful comparisons and identify genes that are differentially expressed between the conditions and gain insights into the molecular differences associated with the disease or condition of interest.
+
+Data considerations: 
+Tissue-Specific Expression:
+For accurate pathway analysis, the data should ideally come from the same tissue or cell type that is under study in the pathway.
+Gene expression can vary significantly between different tissues or cell types. Certain genes may be highly expressed in one tissue but not in others.
+Stage of Disease:
+The stage of the disease can also affect gene expression profiles. Users should consider whether their data reflects the disease stage relevant to their research.
+Inter-Patient Variability:
+Variability between patients can impact gene expression profiles. If the goal is to draw broader conclusions, it’s beneficial to use data that represents a cross-section of the patient population affected by the specific cancer.
+Consistency in Data Sources:
+Consistency in the source of data is important. Mixing data from different tissues, disease stages, or patient profiles without proper controls can lead to misleading conclusions.
 
 
 #### Considerations: 
