@@ -2,11 +2,11 @@
 
 To get started with this R/Shiny app, follow these steps:
 
-1. **Create a New Directory**: Open your terminal or file explorer and create a new directory where you want to set up the app. You can do this with the following command:
+1. **Create a New Directory and Clone Repository**: Open your terminal or file explorer and create a new directory where you want to set up the app. You can do this with the following command:
 
    ```bash
    mkdir cancer-pathway-interactive-visualizer
-git clone https://github.com/jlog3/Cancer-Pathway-Interactive-Visualizer.git cancer-pathway-interactive-visualizer
+   git clone https://github.com/jlog3/Cancer-Pathway-Interactive-Visualizer.git cancer-pathway-interactive-visualizer
 
 2. **Install Required R Packages**:
 ```R
