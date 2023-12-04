@@ -22,9 +22,12 @@ library(DESeq2)
 # 
 # what data can we expect exactly
 # 
-# 
-# 
-# 
+# Issues: 
+# bug: slecting pathway  40, 53 
+#Warning: Error in DESeqDataSet: NA values are not allowed in the count matrix
+
+#
+
 
 server <- function(input, output, session) {
   # browser()
@@ -110,7 +113,6 @@ server <- function(input, output, session) {
     # head(pathway_data()$selected_name_column, n = 7)  # Adjust 'n' as needed
     pathway_data()$selected_name_column  # Adjust 'n' as needed
     
-    
   })
   
   # Helper Function to get gene names for a pathway
@@ -140,12 +142,9 @@ server <- function(input, output, session) {
                            column = "ENSEMBL", 
                            keytype = "SYMBOL",
                            multiVals = "first")
-      
       # browser()
-      
       # Return the gene names as a data frame for table output
       data.frame(GeneNames = mapped_ids, GeneDetails = genes)
-      
       
     }, error = function(e) {
       # Handle error (e.g., KEGG site down)
@@ -154,20 +153,78 @@ server <- function(input, output, session) {
       # Return an empty data frame or a data frame with an error message
       return(data.frame(GeneNames = "Data unavailable due to KEGG server issue"))
     })
-    
     # return(result[["GeneNames"]])
     return(result)
+  }
+
+  # done getting pathway details
+  
+  ### $$$ get missing genes from user/example data
+  missingGenesInControl <- reactiveVal()
+  missingGenesInExperiment <- reactiveVal()
+  
+  updateMissingGenes <- function() {
+    req(deaResults())
     
+    # browser()
+    # Get gene names from pathway_data
+    pathway_genes <- pathway_data()$gene_names[["GeneNames"]]
+    
+    # Find missing genes in control data
+    missing_control_genes <- pathway_genes[!pathway_genes %in% rownames(geneData())]
+    
+    # Find missing genes in experimental data
+    missing_experiment_genes <- pathway_genes[!pathway_genes %in% rownames(geneData2())]
+    
+    # Update the reactive values
+    missingGenesInControl(missing_control_genes)
+    missingGenesInExperiment(missing_experiment_genes)
   }
   
-  # done getting pathway details
-
+  
+  observe({
+    # Assuming pathway_data, geneData, and geneData2 are reactive sources
+    updateMissingGenes()
+  })
+  
+  # output$missingControlGeneList <- renderText({
+  #   paste("Missing Genes in Control:", paste(missingGenesInControl(), collapse = ", "))
+  # })
+  # Render missing genes in control data
+  
+  # output$missingControlGeneList <- renderText({
+  #   missing_control_genes <- missingGenesInControl()
+  #   if (length(missing_control_genes) > 0) {
+  #     paste("Missing Genes in Control:", paste(missing_control_genes, collapse = ", "))
+  #   } else {
+  #     "No missing genes in Control data."
+  #   }
+  # })
+  
+  # output$missingExperimentGeneList <- renderText({
+  #   paste("Missing Genes in Experiment:", paste(missingGenesInExperiment(), collapse = ", "))
+  # })
+  # Render missing genes in experimental data
+  # output$missingExperimentGeneList <- renderText({
+  #   missing_experiment_genes <- missingGenesInExperiment()
+  #   if (length(missing_experiment_genes) > 0) {
+  #     paste("Missing Genes in Experiment:", paste(missing_experiment_genes, collapse = ", "))
+  #   } else {
+  #     "No missing genes in Experimental data."
+  #   }
+  # })
+  
+  
+  
+  ### $$$ 
+  
+  
   # Reactive expression for DEA
   deaResults <- reactive({
     req(geneData(), geneData2())
     print('in dea')
-    
     # browser()
+    
     #   ctl         exper
     
     # geneDataX return the ensembleIds and expression 
@@ -179,6 +236,15 @@ server <- function(input, output, session) {
     # rmove the irrelavent genes from the expression set for the user Genedata
     expression_selected_ctl <- geneData()[pathway_data()$gene_names[["GeneNames"]], ]
     expression_selected_exp <- geneData2()[pathway_data()$gene_names[["GeneNames"]], ]
+    
+    expression_selected_ctl <- na.omit(expression_selected_ctl)
+    expression_selected_exp <- na.omit(expression_selected_exp)
+    
+    
+    # having NA in expression_selected_ctl  means that genes from pathway are not in the user/example geneData ?
+    
+    
+    
     
     # gene_expression_sample1 <- expression_selected[, 1:2]  # limit the samples if needed
     
@@ -219,7 +285,6 @@ server <- function(input, output, session) {
     # Get results
     results <- results(dds)
     
-    
     # 5 Extracting Log Fold Changes:
     # You'll want to extract the log fold changes from the results for visualization in pathview.
     log_fold_changes <- results$log2FoldChange
@@ -229,17 +294,8 @@ server <- function(input, output, session) {
     
     return(list(log_fold_changes=log_fold_changes, names_log_fold_changes=names(log_fold_changes)))
     
-    # # 6 Visualization with Pathview:
-    # #   Now, use the log_fold_changes for visualization:
-    # pathview(gene.data = log_fold_changes, 
-    #          pathway.id = "hsa04010", 
-    #          species = "hsa", 
-    #          gene.idtype = "ensembl",
-    #          png = TRUE)
-    
   })
   
-  # generate pathway diagram
   pathway_diagram <- reactive({
     # Ensure file1 is uploaded
     # req(input$file1)
@@ -249,6 +305,8 @@ server <- function(input, output, session) {
     # Define the output directory
     outputDir <- file.path(getwd()) #, "www"
     
+    gc()
+    # most memory intensive point: 1330 MB 1000 ms
     # Generate pathway diagram
     pathview(gene.data = deaResults()$log_fold_changes,
              # pathway.id = input$pathwayId,
@@ -271,15 +329,6 @@ server <- function(input, output, session) {
     # list(image = list(src = file.path(tempdir(), "pathway_diagram.png")))
   })
   
-  
-  
-  
-  # # Render the pathway diagram in UI
-  # output$pathwayOutput <- renderImage({
-  #   # browser()
-  #   pathway_diagram()$image
-  # }, deleteFile = FALSE)
-  
   # Define a reactive expression for image readiness
   isImageReady <- reactive({
     # Your logic to determine if the image is ready
@@ -293,50 +342,38 @@ server <- function(input, output, session) {
     }
   })
   
-  # Render the pathway diagram
+  # Render the pathway diagram  KEEP THIS
   output$pathwayOutput <- renderImage({
     # browser()
     pathway_diagram()$image  # Assuming pathway_diagram() returns the image information
   }, deleteFile = FALSE)
   
-  
+  # output both path diagram and gene list in  the same to keep them block level w each other 
+  # Render the pathway diagram
+  # output$dynamicContent <- renderUI({
+  #   # Assuming pathway_diagram() returns the path to the image
+  #   image_path <- pathway_diagram()$image_path
+  #   
+  #   # Create an image element
+  #   image_output <- tags$img(src = image_path, style = "display: block; max-width: 100%; height: auto;")
+  #   
+  #   # Text outputs for missing genes
+  #   missing_control_output <- missingGenesInControl()
+  #   missing_experiment_output <- missingGenesInExperiment()
+  #   
+  #   # Combine image and text outputs in a list
+  #   tagList(
+  #     image_output,
+  #     HTML(paste("Missing Genes in Control:", missing_control_output)),
+  #     HTML(paste("Missing Genes in Experiment:", missing_experiment_output))
+  #   )
+  # }) # , deleteFile = FALSE)
   
 
-  # Output the gene names
-  # output$geneNames <- renderTable({
-  #   pathway_data()$gene_names
-  # })
-
-  # Output the mapped IDs
-  # output$mappedIds <- renderTable({
-  #   pathway_data()$mapped_ids
-  # })
-  
-  
-  
-
-  # 
-  # 
-  # # Reset example data when a file is uploaded
-  # observeEvent(input$file2, {
-  #   if (!is.null(input$file2)) {
-  #     # Reset example data and its loaded status
-  #     reactiveExampleData(NULL)
-  #     exampleControlDataLoaded(FALSE)
-  #   }
-  # })
-  # observeEvent(input$file1, {
-  #   if (!is.null(input$file1)) {
-  #     # Reset example data and its loaded status
-  #     reactiveExampleData(NULL)
-  #     exampleControlDataLoaded(FALSE)
-  #   }
-  # })
-  
-  #   # # Reactive value to store example control data status
+    #   # # Reactive value to store example control data status
   exampleControlDataLoaded <- reactiveVal(FALSE)
   # # # Reactive value to store the example data
-  reactiveExampleData <- reactiveVal(NULL)
+  # reactiveExampleData <- reactiveVal(NULL)
   
   # Reactive value to store gene data
   geneData <- reactiveVal()
@@ -354,7 +391,6 @@ server <- function(input, output, session) {
       exampleControlDataLoaded(FALSE)
     }
 
-    
     # browser()
     # When no file is uploaded, return NULL
 
@@ -449,75 +485,6 @@ server <- function(input, output, session) {
     return(data_all)
 
   }
-    
-    
-    # # Averaging duplicates
-    # data_all <- aggregate(data_all, by = list(rownames(data_all)), FUN = mean)
-    # 
-    # # Rename the rownames
-    # rownames(data_all) <- data_all$Group.1
-    # data_all <- data_all[-1]
-    # 
-    # return(data_all)
-  
-  
-  
-  
-  # experimental data   debug had to fix Warning: Error in <Anonymous>: error in evaluating the argument 'x' in selecting a method for function 'head': 
-  # by making geneData return empty dataframe by default 
-  output$controlTable <- renderTable({
-    # Use browser() to inspect the data
-    # browser()
-    data_to_display <- geneData()
-    if (is.data.frame(data_to_display)) {
-      head(data_to_display, n = 5)
-    } else {
-      return(data.frame(Message = "Data is not available"))
-    }
-  })
-  # # control group  Render the table in the UI
-  # output$controlTable <- renderTable({
-  #   # geneData()
-  #   # browser()
-  #   head(geneData(), n = 5)  # Adjust 'n' as needed
-  #   
-  # })
-  
-  # # React to the button click
-  # load user disease data or example data---v
-  # Combined renderTable for both example and uploaded data
-  output$experimentalTable <- renderTable({
-    if (!is.null(input$file2) && input$file2$size > 0) {
-      # If a file is uploaded, display user-uploaded data
-      head(geneData2(), n = 5)  # Adjust 'n' as needed
-    } else {
-      # Display example data
-      head(reactiveExampleData(), n = 5)  # Adjust 'n' as needed
-    }
-    # } else {
-    #   # Optional: Placeholder if no data is loaded
-    #   return(data.frame(Message = "No data loaded"))
-    # }
-  })
-  
-  # output$combinedCtlExpTable <- renderTable({  
-  #   # This will trigger 'deaResults' to run and use its output here
-  #   deaResults()
-  # })
-  
-  # dont need to dispay anything after DEA
-  # if anything display the pathway genes that are not in one or both of the uploaded data
-  # output$combinedCtlExpTable <- renderTable({  
-  #   # Check if 'deaResults()' returns a valid dataframe
-  #   result <- deaResults()
-  #   if (is.data.frame(result)) {
-  #     return(result)
-  #   } else {
-  #     return(data.frame(Message = "No data available"))
-  #   }
-  # })
-  
-  
   
   observeEvent(input$loadExample, {
     # browser()
@@ -527,8 +494,8 @@ server <- function(input, output, session) {
       # exampleData <- read.csv("kirc_expression_matrix.csv")
   
     # Paths to the example files
-    path_to_file1 <- 'primary_tumor_test_rawcounts.csv'
-    path_to_file2 <- 'primary_normal_test_rawcounts.csv'
+    path_to_file1 <- 'data/primary_tumor_test_rawcounts.csv'
+    path_to_file2 <- 'data/primary_normal_test_rawcounts.csv'
     
     # Process the data as if it was uploaded
     file1gd <- processGeneDataFile(path_to_file1) 
@@ -555,6 +522,77 @@ server <- function(input, output, session) {
   }
   
 }
+    
+    
+  
+  
+    # # Averaging duplicates
+    # data_all <- aggregate(data_all, by = list(rownames(data_all)), FUN = mean)
+    # 
+    # # Rename the rownames
+    # rownames(data_all) <- data_all$Group.1
+    # data_all <- data_all[-1]
+    # 
+    # return(data_all)
+  
+  
+  
+  
+  # experimental data   debug had to fix Warning: Error in <Anonymous>: error in evaluating the argument 'x' in selecting a method for function 'head': 
+  # by making geneData return empty dataframe by default 
+  # output$controlTable <- renderTable({
+  #   # Use browser() to inspect the data
+  #   # browser()
+  #   data_to_display <- geneData()
+  #   if (is.data.frame(data_to_display)) {
+  #     head(data_to_display, n = 5)
+  #   } else {
+  #     return(data.frame(Message = "Data is not available"))
+  #   }
+  # })
+  # # control group  Render the table in the UI
+  # output$controlTable <- renderTable({
+  #   # geneData()
+  #   # browser()
+  #   head(geneData(), n = 5)  # Adjust 'n' as needed
+  #   
+  # })
+  
+  # # React to the button click
+  # load user disease data or example data---v
+  # Combined renderTable for both example and uploaded data
+  # output$experimentalTable <- renderTable({
+  #   if (!is.null(input$file2) && input$file2$size > 0) {
+  #     # If a file is uploaded, display user-uploaded data
+  #     head(geneData2(), n = 5)  # Adjust 'n' as needed
+  #   } else {
+  #     # Display example data
+  #     head(reactiveExampleData(), n = 5)  # Adjust 'n' as needed
+  #   }
+  # })
+    # } else {
+    #   # Optional: Placeholder if no data is loaded
+    #   return(data.frame(Message = "No data loaded"))
+    # }
+  
+  # output$combinedCtlExpTable <- renderTable({  
+  #   # This will trigger 'deaResults' to run and use its output here
+  #   deaResults()
+  # })
+  
+  # dont need to dispay anything after DEA
+  # if anything display the pathway genes that are not in one or both of the uploaded data
+  # output$combinedCtlExpTable <- renderTable({  
+  #   # Check if 'deaResults()' returns a valid dataframe
+  #   result <- deaResults()
+  #   if (is.data.frame(result)) {
+  #     return(result)
+  #   } else {
+  #     return(data.frame(Message = "No data available"))
+  #   }
+  # })
+  
+  
 
   # 
   # # Output for gene names table

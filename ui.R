@@ -5,6 +5,19 @@ library(shiny)
 # Run Your App:
 # use this to run the app -- the other way does not update the cached and will run old versions
 # shiny::runApp("/home/john/Desktop/cancer_vis/shiny_app/")
+# deploy to shinyui 
+# library(rsconnect)
+# rsconnect::deployApp('/home/john/Desktop/cancer_vis/shiny_app')
+# need to change title and url
+
+# 
+# 2023-12-01T23:04:37.329491+00:00 shinyapps[10693158]: Container event from container-8924892: oom (out of memory)
+# profvis({
+# shiny::runApp("/home/john/Desktop/cancer_vis/shiny_app/")
+# })
+# i tell what i have in my rstudio using and u format, i guess >= ?  R version 4.3.2 shiny 1.8.0  pathview 1.42.0  KEGGREST 1.42.0  TCGAbiolinks 2.30.0 Biostrings 2.70.1   biomaRt 2.58.0  SummarizedExperiment 1.32.0  DESeq2 1.42.0 
+
+
 
 ui <- fluidPage(
   titlePanel("Cancer Pathway Visualization"),
@@ -33,7 +46,7 @@ ui <- fluidPage(
       ),
       
       # Button to load example control data
-      actionButton("loadExample", "Load Example Control Data")
+      actionButton("loadExample", "Load Example Data")
       
       # Add other input controls here if needed
     ),
@@ -44,6 +57,8 @@ ui <- fluidPage(
       #     tableOutput("geneNames")
       # ),
       # Include custom CSS
+      # tableOutput("missingGeneList")
+      
       tags$head(
         tags$style(HTML("
             .custom-table-style {
@@ -51,7 +66,7 @@ ui <- fluidPage(
                 margin-bottom: 20px; /* Same as form.well */
                 position: absolute;
                 left: -49%; 
-                top: 410px;
+                top: 405px;
                 /* Add other styling as needed to match form.well */
             }
         "))
@@ -65,7 +80,19 @@ ui <- fluidPage(
       ),
       
       # Place the uiOutput outside of the div with the absolute positioning
-      uiOutput("pathwayUI")
+      uiOutput("pathwayUI"),  # KEEP THIS
+      # uiOutput("dynamicContent")
+      
+      
+      
+      # Add UI elements for missing genes
+      # uiOutput("missingControlGeneList"),
+      # uiOutput("missingExperimentGeneList")
+      # Apply inline styles directly to the output elements
+      
+      # uiOutput("missingControlGeneList", style = "display: block; clear: both; margin-top: 10px;"),
+      # uiOutput("missingExperimentGeneList", style = "display: block; clear: both; margin-top: 10px;")
+      
     )
     
   )
