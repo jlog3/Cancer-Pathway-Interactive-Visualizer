@@ -42,6 +42,7 @@ Two CSV files are required for plotting.
 - Control/Healthy Data
 
 One of these files should look like this:
+
 ![sample and gene matrix](./images/gene_csv.png)
 
 Rows are ensembl gene ids. 
