@@ -53,11 +53,12 @@ This allows you to make meaningful comparisons and identify genes that are diffe
 
 #### Data acquisition:
 
-Go to https://portal.gdc.cancer.gov/projects
-Under the “Program” dropdown select “TCGA”
-Choose your project of interest.  
-Follow the R script  downloadTCGA.R
-Follow directions for changing the project and sample type as you require. 
+1. Go to [GDC Cancer Data Portal](https://portal.gdc.cancer.gov/projects).
+2. Under the “Program” dropdown, select “TCGA”.
+3. Choose your project of interest.
+4. Follow the R script `downloadTCGA.R`.
+5. Follow directions for changing the project and sample type as you require.
+ 
 
 ---
 
