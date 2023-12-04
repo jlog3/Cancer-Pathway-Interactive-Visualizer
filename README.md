@@ -9,7 +9,6 @@ To get started with this R/Shiny app, follow these steps:
    ```
    **Clone Repository**
    ```bash
-   cd cancer-pathway-interactive-visualizer
    git clone https://github.com/jlog3/Cancer-Pathway-Interactive-Visualizer.git cancer-pathway-interactive-visualizer
    ```
 2. **Install Required R Packages**:
@@ -37,8 +36,8 @@ Click "Load Example Data" and wait for plot to update.
 
 ## User Data Upload
 Two CSV files are required for plotting. 
--Experiment/Tumor Data
--Control/Healthy Data
+- Experiment/Tumor Data
+- Control/Healthy Data
 
 One of these files should look like this:
 <img url>
