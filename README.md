@@ -36,11 +36,12 @@ Click "Load Example Data" and wait for plot to update.
 
 ## User Data Upload
 Two CSV files are required for plotting. 
+
 - Experiment/Tumor Data
 - Control/Healthy Data
 
 One of these files should look like this:
-<img url>
+![Alt Text](Image_URL)
 
 Rows are ensembl gene ids. 
 Columns are sample names.
