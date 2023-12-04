@@ -50,6 +50,7 @@ Each file/group must contain at least two samples (columns).
 This allows you to make meaningful comparisons and identify genes that are differentially expressed between the conditions and gain insights into the molecular differences associated with the disease or condition of interest.
 
 #### Data acquisition:
+
 Go to https://portal.gdc.cancer.gov/projects
 Under the “Program” dropdown select “TCGA”
 Choose your project of interest.  
@@ -57,6 +58,7 @@ Follow the R script  downloadTCGA.R
 Follow directions for changing the project and sample type as you require. 
 
 #### Data considerations: 
+
 Tissue-Specific Expression:
 -For accurate pathway analysis, the data should ideally come from the same tissue or cell type that is under study in the pathway.
 -Gene expression can vary significantly between different tissues or cell types. Certain genes may be highly expressed in one tissue but not in others.
