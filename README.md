@@ -7,8 +7,9 @@ To get started with this R/Shiny app, follow these steps:
    ```bash
    mkdir cancer-pathway-interactive-visualizer
    ```
-**Clone Repository**
+   **Clone Repository**
    ```bash
+   cd cancer-pathway-interactive-visualizer
    git clone https://github.com/jlog3/Cancer-Pathway-Interactive-Visualizer.git cancer-pathway-interactive-visualizer
    ```
 2. **Install Required R Packages**:
